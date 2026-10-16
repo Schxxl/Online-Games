@@ -1,7 +1,371 @@
-<iframe 
-  src="https://www.onlinegames.io/games/2021/unity/stack-fire-ball/index.html" 
-  width="800" 
-  height="600" 
-  style="border:none;" 
-  allowfullscreen>
-</iframe>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ARCADE — Web Games</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        surface: {
+                            DEFAULT: '#09090b',
+                            card: '#121215',
+                            muted: '#18181b',
+                            border: '#27272a',
+                            subtle: '#3f3f46'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- FontAwesome for minimal UI icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Font: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            background-color: #09090b;
+            color: #f4f4f5;
+            font-family: 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Clean responsive 16:9 iframe container */
+        .game-viewport {
+            position: relative;
+            width: 100%;
+            height: 0;
+            padding-bottom: 56.25%; /* 16:9 aspect ratio */
+            background-color: #000;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .game-viewport iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: 0;
+        }
+
+        /* Subtle scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #09090b;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #27272a;
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #3f3f46;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between selection:bg-zinc-700 selection:text-white">
+
+    <!-- Navbar Header -->
+    <header class="border-b border-surface-border bg-surface/80 backdrop-blur-md sticky top-0 z-50">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between gap-4">
+            
+            <!-- Brand Logo -->
+            <a href="#" class="flex items-center gap-2.5 font-semibold tracking-wider text-sm text-white group">
+                <span class="w-6 h-6 rounded bg-zinc-100 text-black flex items-center justify-center font-bold text-xs tracking-tighter group-hover:bg-zinc-300 transition">
+                    A
+                </span>
+                <span>ARCADE</span>
+            </a>
+
+            <!-- Search Bar -->
+            <div class="flex-1 max-w-sm relative">
+                <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-xs text-zinc-500"></i>
+                <input id="searchInput" type="text" placeholder="Search games..." class="w-full bg-surface-muted border border-surface-border text-xs text-zinc-200 placeholder-zinc-500 rounded-md pl-8 pr-3 py-1.5 focus:outline-none focus:border-zinc-500 transition">
+            </div>
+
+            <!-- GitHub link / repo indicator -->
+            <div class="flex items-center gap-3">
+                <span class="text-xs text-zinc-500 hidden sm:inline-block">Hosted on GitHub Pages</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main View Area -->
+    <main class="max-w-6xl w-full mx-auto px-4 sm:px-6 py-8 flex-grow">
+
+        <!-- ================= PAGE 1: CATALOG HOME VIEW ================= -->
+        <section id="catalogView" class="space-y-6">
+            
+            <!-- Category Tabs & Meta Header -->
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-surface-border pb-4">
+                
+                <!-- Category Buttons -->
+                <div class="flex items-center gap-1 overflow-x-auto pb-1 sm:pb-0" id="categoryList">
+                    <button onclick="filterCategory('All')" class="category-btn text-xs font-medium px-3 py-1.5 rounded-md bg-zinc-100 text-black transition">
+                        All Games
+                    </button>
+                    <button onclick="filterCategory('Sports')" class="category-btn text-xs font-medium px-3 py-1.5 rounded-md text-zinc-400 hover:text-zinc-200 hover:bg-surface-muted transition">
+                        Sports
+                    </button>
+                    <button onclick="filterCategory('Action')" class="category-btn text-xs font-medium px-3 py-1.5 rounded-md text-zinc-400 hover:text-zinc-200 hover:bg-surface-muted transition">
+                        Action
+                    </button>
+                    <button onclick="filterCategory('Simulation')" class="category-btn text-xs font-medium px-3 py-1.5 rounded-md text-zinc-400 hover:text-zinc-200 hover:bg-surface-muted transition">
+                        Simulation
+                    </button>
+                </div>
+
+                <div class="text-xs text-zinc-500" id="countDisplay">
+                    3 games available
+                </div>
+            </div>
+
+            <!-- Game Cards Grid -->
+            <div id="gamesGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <!-- Dynamically populated via JavaScript -->
+            </div>
+
+            <!-- Empty Search State -->
+            <div id="emptyState" class="hidden text-center py-20 border border-dashed border-surface-border rounded-lg">
+                <p class="text-sm text-zinc-400">No games matched your search.</p>
+                <button onclick="resetFilters()" class="mt-2 text-xs text-zinc-500 hover:text-zinc-300 underline">Clear search</button>
+            </div>
+
+        </section>
+
+        <!-- ================= PAGE 2: FULL GAME PLAYER VIEW ================= -->
+        <section id="playerView" class="hidden space-y-4">
+            
+            <!-- Player Nav Bar -->
+            <div class="flex items-center justify-between">
+                <button onclick="navigateToHome()" class="inline-flex items-center gap-2 text-xs font-medium text-zinc-400 hover:text-white transition">
+                    <i class="fa-solid fa-arrow-left"></i>
+                    <span>Back to catalog</span>
+                </button>
+
+                <div class="flex items-center gap-2">
+                    <button onclick="toggleFullscreen()" class="inline-flex items-center gap-1.5 text-xs font-medium bg-surface-muted hover:bg-surface-border text-zinc-300 px-3 py-1.5 rounded border border-surface-border transition">
+                        <i class="fa-solid fa-expand text-[10px]"></i>
+                        <span>Fullscreen</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Screen Viewport Box -->
+            <div id="viewportContainer" class="bg-black border border-surface-border rounded-lg overflow-hidden shadow-2xl">
+                <div id="iframeWrapper" class="game-viewport">
+                    <!-- Dynamic iFrame injected here -->
+                </div>
+            </div>
+
+            <!-- Game Header Info -->
+            <div class="flex items-start justify-between gap-4 pt-2">
+                <div>
+                    <h1 id="playerTitle" class="text-lg font-semibold text-white">Game Title</h1>
+                    <p id="playerCategory" class="text-xs text-zinc-500 mt-0.5">Category</p>
+                </div>
+                
+                <button onclick="reloadIframe()" title="Reload Game" class="p-2 text-zinc-500 hover:text-zinc-200 transition">
+                    <i class="fa-solid fa-rotate-right text-xs"></i>
+                </button>
+            </div>
+
+        </section>
+
+    </main>
+
+    <!-- Simple Minimal Footer -->
+    <footer class="border-t border-surface-border py-6 text-center text-xs text-zinc-600">
+        <div class="max-w-6xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
+            <p>ARCADE — Clean Browser Game Portal</p>
+            <p>Ready for GitHub Pages</p>
+        </div>
+    </footer>
+
+    <script>
+        // Game Catalog Array
+        const GAMES = [
+            {
+                id: "golf-bit",
+                title: "Golf Bit",
+                category: "Sports",
+                embedUrl: "https://cloud.onlinegames.io/games/2026/construct/328/golf-bit/game.html",
+                svgIcon: `<svg class="w-10 h-10 text-emerald-500/80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 21h18M12 21V3l8 4-8 4"/></svg>`
+            },
+            {
+                id: "backflip-challenge",
+                title: "Backflip Challenge",
+                category: "Action",
+                embedUrl: "https://cloud.onlinegames.io/games/2026/unity/backflip-challenge/game.html",
+                svgIcon: `<svg class="w-10 h-10 text-amber-500/80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>`
+            },
+            {
+                id: "cat-simulator",
+                title: "Cat Simulator",
+                category: "Simulation",
+                embedUrl: "https://www.onlinegames.io/games/2022/unity4/cat-simulator/index.html",
+                svgIcon: `<svg class="w-10 h-10 text-blue-500/80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>`
+            }
+        ];
+
+        let activeCategory = 'All';
+        let searchQuery = '';
+        let currentGame = null;
+
+        // On Page Load
+        window.addEventListener('DOMContentLoaded', () => {
+            // Register search bar event
+            document.getElementById('searchInput').addEventListener('input', (e) => {
+                searchQuery = e.target.value.toLowerCase().trim();
+                renderCatalog();
+            });
+
+            // Handle Hash URL Router
+            window.addEventListener('hashchange', handleRoute);
+            handleRoute();
+        });
+
+        // Router based on window location hash (#play/game-id)
+        function handleRoute() {
+            const hash = window.location.hash;
+
+            if (hash.startsWith('#play/')) {
+                const gameId = hash.replace('#play/', '');
+                const game = GAMES.find(g => g.id === gameId);
+                if (game) {
+                    showPlayer(game);
+                } else {
+                    navigateToHome();
+                }
+            } else {
+                showCatalog();
+            }
+        }
+
+        // Render Game Grid
+        function renderCatalog() {
+            const grid = document.getElementById('gamesGrid');
+            const emptyState = document.getElementById('emptyState');
+            grid.innerHTML = '';
+
+            const filtered = GAMES.filter(game => {
+                const matchesCat = activeCategory === 'All' || game.category === activeCategory;
+                const matchesSearch = game.title.toLowerCase().includes(searchQuery) || game.category.toLowerCase().includes(searchQuery);
+                return matchesCat && matchesSearch;
+            });
+
+            document.getElementById('countDisplay').innerText = `${filtered.length} game${filtered.length === 1 ? '' : 's'}`;
+
+            if (filtered.length === 0) {
+                emptyState.classList.remove('hidden');
+                return;
+            } else {
+                emptyState.classList.add('hidden');
+            }
+
+            filtered.forEach(game => {
+                const card = document.createElement('a');
+                card.href = `#play/${game.id}`;
+                card.className = "group block bg-surface-card border border-surface-border rounded-lg overflow-hidden hover:border-zinc-500 transition duration-200";
+
+                card.innerHTML = `
+                    <div class="h-36 bg-surface-muted border-b border-surface-border flex items-center justify-center p-6 group-hover:bg-zinc-900 transition">
+                        ${game.svgIcon}
+                    </div>
+                    <div class="p-4 flex items-center justify-between">
+                        <div>
+                            <h3 class="text-sm font-semibold text-white group-hover:text-zinc-200">${game.title}</h3>
+                            <span class="text-xs text-zinc-500">${game.category}</span>
+                        </div>
+                        <span class="text-xs font-medium text-zinc-400 group-hover:text-white transition flex items-center gap-1">
+                            Play <i class="fa-solid fa-arrow-right text-[10px]"></i>
+                        </span>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        // Category Filtering
+        function filterCategory(cat) {
+            activeCategory = cat;
+            
+            // Update button styles
+            const buttons = document.querySelectorAll('.category-btn');
+            buttons.forEach(btn => {
+                if (btn.innerText.trim() === (cat === 'All' ? 'All Games' : cat)) {
+                    btn.className = "category-btn text-xs font-medium px-3 py-1.5 rounded-md bg-zinc-100 text-black transition";
+                } else {
+                    btn.className = "category-btn text-xs font-medium px-3 py-1.5 rounded-md text-zinc-400 hover:text-zinc-200 hover:bg-surface-muted transition";
+                }
+            });
+
+            renderCatalog();
+        }
+
+        function resetFilters() {
+            searchQuery = '';
+            document.getElementById('searchInput').value = '';
+            filterCategory('All');
+        }
+
+        // View Navigators
+        function showCatalog() {
+            document.getElementById('catalogView').classList.remove('hidden');
+            document.getElementById('playerView').classList.add('hidden');
+            document.getElementById('iframeWrapper').innerHTML = ''; // Stop audio/video
+            renderCatalog();
+            window.scrollTo(0, 0);
+        }
+
+        function showPlayer(game) {
+            currentGame = game;
+            document.getElementById('catalogView').classList.add('hidden');
+            document.getElementById('playerView').classList.remove('hidden');
+
+            document.getElementById('playerTitle').innerText = game.title;
+            document.getElementById('playerCategory').innerText = game.category;
+
+            // Inject iFrame
+            const wrapper = document.getElementById('iframeWrapper');
+            wrapper.innerHTML = `<iframe src="${game.embedUrl}" title="${game.title}" allowfullscreen allow="autoplay; gamepad; keyboard"></iframe>`;
+            
+            window.scrollTo(0, 0);
+        }
+
+        function navigateToHome() {
+            window.location.hash = '';
+        }
+
+        function reloadIframe() {
+            if (currentGame) {
+                showPlayer(currentGame);
+            }
+        }
+
+        function toggleFullscreen() {
+            const wrapper = document.getElementById('iframeWrapper');
+            if (wrapper.requestFullscreen) {
+                wrapper.requestFullscreen();
+            } else if (wrapper.webkitRequestFullscreen) {
+                wrapper.webkitRequestFullscreen();
+            }
+        }
+    </script>
+</body>
+</html>
